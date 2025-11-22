@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday!</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&family=Pacifico&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Custom Styles & Animations */
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #0f0f1a;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        .font-hand {
+            font-family: 'Pacifico', cursive;
+        }
+
+        /* Screen Transition Utility */
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in-out;
+            z-index: 0;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* Glowing Text */
+        .glow-text {
+            text-shadow: 0 0 10px rgba(236, 72, 153, 0.7), 0 0 20px rgba(236, 72, 153, 0.5);
+        }
+
+        /* Gradient Button */
+        .btn-primary {
+            background: linear-gradient(45deg, #ec4899, #8b5cf6);
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+
+        /* Cake Animations */
+        .candle {
+            display: none;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 35px;
+            background: radial-gradient(white, #facc15);
+            border-radius: 4px;
+            z-index: 20;
+        }
+        
+        .flame {
+            display: none;
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 25px;
+            background: radial-gradient(ellipse at bottom, #fef3c7, #f59e0b, #ef4444);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: flicker 1s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+            100% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+        }
+
+        /* Balloon Pop Animation */
+        .balloon {
+            transition: transform 0.3s ease, opacity 0.3s;
+            cursor: pointer;
+        }
+        .balloon.popped {
+            transform: scale(1.2);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Card Swipe Animation */
+        .photo-card {
+            position: absolute;
+            transition: transform 0.5s ease, opacity 0.5s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Message Card Flip */
+        .envelope-container {
+            perspective: 1000px;
+        }
+        .envelope {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            transition: transform 1s;
+            transform-style: preserve-3d;
+        }
+        .envelope.open {
+            transform: rotateY(180deg);
+        }
+        .envelope-front, .envelope-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+        }
+        .envelope-front {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 2;
+        }
+        .envelope-back {
+            background: #fff;
+            color: #333;
+            transform: rotateY(180deg);
+            padding: 20px;
+            overflow-y: auto;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Floating particles */
+        .floating-heart {
+            position: absolute;
+            color: rgba(236, 72, 153, 0.2);
+            animation: floatUp 10s linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+
+        /* Music Player */
+        .music-control {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 200;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Audio Element (Hidden) -->
+    <!-- Note: Autoplay often blocked, controlled by JS -->
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        Your browser does not support audio.
+    </audio>
+
+    <!-- Music Toggle Button -->
+    <div class="music-control" onclick="toggleMusic()">
+        <i id="music-icon" class="fas fa-volume-mute"></i>
+    </div>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Background Floating Hearts -->
+    <div id="background-hearts"></div>
+
+    <!-- === SCREEN 1: Loading === -->
+    <div id="screen-loading" class="screen active">
+        <div class="text-6xl font-bold text-pink-500 animate-pulse" id="loading-counter">0%</div>
+        <p class="mt-4 text-gray-400 text-sm tracking-widest uppercase">Crafting your special moment...</p>
+    </div>
+
+    <!-- === SCREEN 2: Welcome === -->
+    <div id="screen-welcome" class="screen">
+        <div class="mb-8 relative animate-bounce">
+            <!-- Cute Bear Sticker Placeholder -->
+            <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXJ5eGZ4eXF4eXF4eXF4eXF4eXF4eXF4eXF4eXF4eXF4eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/L3vqJ7s7P9HaaUjQdF/giphy.gif" alt="Cute Bear" class="w-40 h-40 object-contain drop-shadow-xl">
+        </div>
+        <h1 class="text-3xl font-hand text-white text-center px-6 mb-4 glow-text">
+            A Cutiepie was born today, <br><span class="text-pink-400">21 years ago!</span>
+        </h1>
+        <p class="text-gray-300 text-center mb-8 px-8 text-sm">
+            Yes, it's YOU! A little surprise awaits...
+        </p>
+        <button onclick="nextScreen('screen-cake')" class="btn-primary px-8 py-3 rounded-full text-white font-bold flex items-center gap-2 text-lg">
+            <i class="fas fa-gift"></i> Start the Surprise
+        </button>
+    </div>
+
+    <!-- === SCREEN 3: Cake Ceremony === -->
+    <div id="screen-cake" class="screen">
+        <!-- Flags Decoration (Hidden initially) -->
+        <div id="flags" class="absolute top-0 left-0 w-full transition-all duration-1000 -translate-y-full opacity-0">
+            <img src="https://cdn-icons-png.flaticon.com/512/7363/7363629.png" class="w-full h-auto opacity-80" alt="Flags">
+        </div>
+
+        <h2 id="cake-msg" class="text-2xl font-hand text-white mb-8 opacity-0 transition-opacity duration-500">Let's decorate!</h2>
+
+        <div class="relative mt-10 mb-12 group">
+            <!-- Cake Base -->
+            <div class="relative transition-transform duration-300 transform hover:scale-105">
+                <!-- Using FontAwesome layers or SVG for Cake -->
+                <div class="text-[150px] leading-none relative">
+                    <!-- Base Cake -->
+                    <span id="cake-base">🎂</span>
+                </div>
+                <!-- Toppings (Initially Hidden) -->
+                <div id="cake-topping" class="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-700">
+                    <!-- Add some sparkles or extra emojis to simulate decoration -->
+                    <span class="absolute -top-2 left-4 text-2xl">🍓</span>
+                    <span class="absolute top-0 right-6 text-2xl">🍒</span>
+                    <span class="absolute bottom-4 right-0 text-2xl">🍬</span>
+                </div>
+                
+                <!-- Candle (Hidden) -->
+                <div id="candle" class="candle"></div>
+                <div id="flame" class="flame"></div>
+            </div>
+        </div>
+
+        <div id="cake-buttons" class="flex flex-col gap-4">
+            <button id="btn-decorate" onclick="decorateCake()" class="btn-primary px-8 py-3 rounded-full text-white font-bold">
+                <i class="fas fa-wand-magic-sparkles"></i> Decorate
+            </button>
+            <button id="btn-light" onclick="lightCandle()" class="hidden btn-primary px-8 py-3 rounded-full text-white font-bold bg-gradient-to-r from-orange-500 to-red-500">
+                <i class="fas fa-fire"></i> Light the Candle
+            </button>
+            <button id="btn-cake-next" onclick="nextScreen('screen-balloons')" class="hidden bg-white text-pink-600 px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition">
+                <i class="fas fa-arrow-right"></i> Pop the Balloons
+            </button>
+        </div>
+    </div>
+
+    <!-- === SCREEN 4: Balloon Pop === -->
+    <div id="screen-balloons" class="screen">
+        <h2 class="text-2xl font-hand text-white mb-8 glow-text">Pop all 4 balloons!</h2>
+        
+        <div class="relative w-full max-w-md h-80 flex items-center justify-center">
+            <!-- Hidden Message Behind Balloons -->
+            <div class="absolute inset-0 flex items-center justify-around px-4 z-0">
+                <span class="text-white font-bold text-xl animate-pulse delay-100">You</span>
+                <span class="text-white font-bold text-xl animate-pulse delay-200">Are</span>
+                <span class="text-white font-bold text-xl animate-pulse delay-300">A</span>
+                <span class="text-pink-400 font-bold text-2xl animate-pulse delay-400 font-hand">Cutie!</span>
+            </div>
+
+            <!-- Balloons -->
+            <div class="absolute inset-0 flex items-end justify-around z-10 px-2">
+                <!-- Balloon 1 -->
+                <div class="balloon relative group" onclick="popBalloon(this)">
+                    <div class="w-16 h-20 bg-pink-500 rounded-full rounded-b-md shadow-lg relative opacity-90 hover:opacity-100">
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0.5 h-20 bg-white/30"></div>
+                        <div class="absolute top-3 right-3 w-3 h-3 bg-white/40 rounded-full"></div>
+                    </div>
+                </div>
+                <!-- Balloon 2 -->
+                <div class="balloon relative group top-[-20px]" onclick="popBalloon(this)">
+                    <div class="w-16 h-20 bg-yellow-400 rounded-full rounded-b-md shadow-lg relative opacity-90 hover:opacity-100">
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0.5 h-24 bg-white/30"></div>
+                        <div class="absolute top-3 right-3 w-3 h-3 bg-white/40 rounded-full"></div>
+                    </div>
+                </div>
+                <!-- Balloon 3 -->
+                <div class="balloon relative group" onclick="popBalloon(this)">
+                    <div class="w-16 h-20 bg-green-400 rounded-full rounded-b-md shadow-lg relative opacity-90 hover:opacity-100">
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0.5 h-20 bg-white/30"></div>
+                        <div class="absolute top-3 right-3 w-3 h-3 bg-white/40 rounded-full"></div>
+                    </div>
+                </div>
+                <!-- Balloon 4 -->
+                <div class="balloon relative group top-[-10px]" onclick="popBalloon(this)">
+                    <div class="w-16 h-20 bg-blue-400 rounded-full rounded-b-md shadow-lg relative opacity-90 hover:opacity-100">
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0.5 h-22 bg-white/30"></div>
+                        <div class="absolute top-3 right-3 w-3 h-3 bg-white/40 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn-balloons-next" onclick="nextScreen('screen-gallery')" class="hidden mt-12 btn-primary px-8 py-3 rounded-full text-white font-bold transition-all duration-500 transform translate-y-10 opacity-0">
+            Next <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+    </div>
+
+    <!-- === SCREEN 5: Photo Gallery === -->
+    <div id="screen-gallery" class="screen">
+        <h2 class="text-2xl font-hand text-white mb-2">Some Sweet Moments</h2>
+        <p class="text-xs text-gray-400 mb-6">(Tap cards to swipe)</p>
+
+        <div class="relative w-72 h-96" id="card-stack">
+            <!-- Cards will be injected by JS, or hardcoded here for simplicity -->
+            <!-- Card 3 (Bottom) -->
+            <div class="photo-card absolute inset-0 bg-white p-3 rounded-xl transform rotate-3 scale-95 z-10" onclick="swipeCard(this)">
+                <div class="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                    <i class="fas fa-image text-4xl"></i>
+                </div>
+            </div>
+            <!-- Card 2 (Middle) -->
+            <div class="photo-card absolute inset-0 bg-white p-3 rounded-xl transform -rotate-2 scale-100 z-20" onclick="swipeCard(this)">
+                <div class="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                    <i class="fas fa-image text-4xl"></i>
+                </div>
+            </div>
+            <!-- Card 1 (Top) -->
+            <div class="photo-card absolute inset-0 bg-white p-3 rounded-xl transform rotate-1 scale-105 z-30" onclick="swipeCard(this)">
+                <div class="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                    <div class="text-center">
+                        <i class="fas fa-camera text-4xl mb-2"></i>
+                        <p class="text-sm">Insert Photo</p>
+                    </div>
+                </div>
+                <div class="absolute bottom-6 left-0 w-full text-center font-hand text-pink-600 text-xl bg-white/80 py-1">Us Together ❤️</div>
+            </div>
+        </div>
+
+        <button id="btn-gallery-next" onclick="nextScreen('screen-message')" class="mt-10 btn-primary px-8 py-3 rounded-full text-white font-bold hidden">
+            <i class="fas fa-envelope-open-text"></i> Open My Message
+        </button>
+    </div>
+
+    <!-- === SCREEN 6: Message === -->
+    <div id="screen-message" class="screen">
+        <h2 class="text-2xl font-hand text-white mb-8">A Special Message</h2>
+        
+        <div class="envelope-container" onclick="toggleEnvelope()">
+            <div class="envelope" id="envelope">
+                <div class="envelope-front shadow-2xl border-4 border-pink-300">
+                    <div class="text-6xl mb-4">🎈</div>
+                    <h3 class="font-hand text-3xl text-white drop-shadow-md">Happy<br>Birthday</h3>
+                    <p class="text-white mt-2 text-sm uppercase tracking-wider animate-pulse">Tap to Open</p>
+                </div>
+                <div class="envelope-back shadow-2xl">
+                    <h3 class="text-pink-600 font-bold text-xl mb-2">Happy Birthday, Cutiepie!</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed text-left">
+                        You deserve all the happiness, love, and smiles in the world today and always. 
+                        You have this special way of making everything around you brighter.
+                        <br><br>
+                        Your smile, your kindness, and the way you make people feel truly cared for is magical.
+                        <br><br>
+                        I hope your day is filled with laughter, surprises, and moments that make your heart happy.
+                    </p>
+                    <p class="mt-4 font-hand text-lg text-pink-500 text-right">- With Love ❤️</p>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn-message-next" onclick="nextScreen('screen-gift')" class="mt-10 btn-primary px-8 py-3 rounded-full text-white font-bold opacity-0 transition duration-500 pointer-events-none">
+            Next <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <!-- === SCREEN 7: Gift === -->
+    <div id="screen-gift" class="screen">
+        <h2 class="text-2xl font-hand text-white mb-8">One Last Thing...</h2>
+        
+        <div id="gift-box-container" class="relative w-64 h-64 flex items-center justify-center cursor-pointer" onclick="openGift()">
+            <!-- Closed Gift -->
+            <div id="gift-closed" class="text-[150px] animate-bounce drop-shadow-[0_20px_20px_rgba(236,72,153,0.4)]">
+                🎁
+            </div>
+            <!-- Open Gift Content (Hidden) -->
+            <div id="gift-opened" class="hidden flex-col items-center text-center animate-fade-in-up">
+                <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzZ5cW53czJ4bnk2eG55cW53czJ4bnk2eG55cW53czJ4bnk2eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/MDJ9IbxxvDUQM/giphy.gif" class="w-40 h-40 rounded-lg shadow-lg mb-4 border-4 border-pink-500">
+                <h3 class="text-xl font-bold text-white mb-2">Lots of love for you! 💖</h3>
+                <p class="text-gray-300 text-sm">Once again, Happy Birthday! <br>Hope you loved your surprise.</p>
+            </div>
+        </div>
+        
+        <p id="tap-gift-text" class="mt-4 text-gray-400 animate-pulse">Tap the gift</p>
+
+        <button id="btn-replay" onclick="location.reload()" class="hidden mt-8 bg-white text-gray-900 px-8 py-2 rounded-full font-bold shadow-lg hover:bg-gray-200">
+            <i class="fas fa-rotate-right"></i> Replay
+        </button>
+    </div>
+
+    <script>
+        // --- Background Music Logic ---
+        const music = document.getElementById('bg-music');
+        const musicIcon = document.getElementById('music-icon');
+        let isPlaying = false;
+
+        function toggleMusic() {
+            if (isPlaying) {
+                music.pause();
+                musicIcon.classList.remove('fa-volume-up');
+                musicIcon.classList.add('fa-volume-mute');
+            } else {
+                music.play().then(() => {
+                    musicIcon.classList.remove('fa-volume-mute');
+                    musicIcon.classList.add('fa-volume-up');
+                }).catch(e => console.log("Audio play prevented by browser"));
+            }
+            isPlaying = !isPlaying;
+        }
+
+        // --- Navigation Logic ---
+        function nextScreen(screenId) {
+            // Hide current screen
+            const current = document.querySelector('.screen.active');
+            if (current) current.classList.remove('active');
+
+            // Show new screen
+            const next = document.getElementById(screenId);
+            next.classList.add('active');
+
+            // Specific screen logic initialization
+            if (screenId === 'screen-cake') {
+                setTimeout(() => {
+                    document.getElementById('cake-msg').style.opacity = '1';
+                }, 500);
+            }
+        }
+
+        // --- Loading Screen Logic ---
+        let progress = 0;
+        const counterElement = document.getElementById('loading-counter');
+        const loadingInterval = setInterval(() => {
+            progress += Math.floor(Math.random() * 5) + 1;
+            if (progress > 100) progress = 100;
+            counterElement.innerText = progress + "%";
+            
+            if (progress === 100) {
+                clearInterval(loadingInterval);
+                setTimeout(() => {
+                    nextScreen('screen-welcome');
+                    // Try to play music automatically if possible, usually blocked
+                }, 500);
+            }
+        }, 30);
+
+        // --- Background Hearts Animation ---
+        function createHearts() {
+            const container = document.getElementById('background-hearts');
+            const heart = document.createElement('div');
+            heart.innerHTML = '❤';
+            heart.className = 'floating-heart text-2xl';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = Math.random() * 5 + 5 + 's';
+            heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+            container.appendChild(heart);
+            setTimeout(() => heart.remove(), 10000);
+        }
+        setInterval(createHearts, 500);
+
+        // --- Cake Logic ---
+        function decorateCake() {
+            document.getElementById('cake-topping').style.opacity = '1';
+            document.getElementById('btn-decorate').classList.add('hidden');
+            document.getElementById('btn-light').classList.remove('hidden');
+            triggerConfetti(0.5, 0.5);
+        }
+
+        function lightCandle() {
+            document.getElementById('candle').style.display = 'block';
+            document.getElementById('flame').style.display = 'block';
+            
+            // Show Flags
+            const flags = document.getElementById('flags');
+            flags.classList.remove('-translate-y-full', 'opacity-0');
+            
+            // Change Buttons
+            document.getElementById('btn-light').classList.add('hidden');
+            document.getElementById('btn-cake-next').classList.remove('hidden');
+            document.getElementById('cake-msg').innerText = "Make a Wish!";
+            
+            // More confetti
+            let duration = 3 * 1000;
+            let end = Date.now() + duration;
+
+            (function frame() {
+                triggerConfetti(Math.random(), 0.2);
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        // --- Balloon Logic ---
+        let balloonsPopped = 0;
+        function popBalloon(element) {
+            if (element.classList.contains('popped')) return;
+            
+            element.classList.add('popped');
+            balloonsPopped++;
+            
+            // Play pop sound (optional)
+            // new Audio('pop.mp3').play();
+            
+            triggerConfetti(element.getBoundingClientRect().left / window.innerWidth, element.getBoundingClientRect().top / window.innerHeight);
+
+            if (balloonsPopped === 4) {
+                const nextBtn = document.getElementById('btn-balloons-next');
+                nextBtn.classList.remove('hidden');
+                setTimeout(() => {
+                    nextBtn.classList.remove('translate-y-10', 'opacity-0');
+                }, 100);
+            }
+        }
+
+        // --- Gallery Logic ---
+        let cardsSwiped = 0;
+        function swipeCard(card) {
+            // Random direction swipe
+            const dir = Math.random() > 0.5 ? 1 : -1;
+            const rotation = Math.random() * 30 * dir;
+            
+            card.style.transform = `translateX(${150 * dir}%) rotate(${rotation}deg)`;
+            card.style.opacity = '0';
+            
+            cardsSwiped++;
+            // If cards run out (3 cards total)
+            if (cardsSwiped >= 3) {
+                setTimeout(() => {
+                    document.getElementById('btn-gallery-next').classList.remove('hidden');
+                }, 300);
+            }
+        }
+
+        // --- Message Logic ---
+        function toggleEnvelope() {
+            const envelope = document.getElementById('envelope');
+            envelope.classList.toggle('open');
+            
+            if (envelope.classList.contains('open')) {
+                setTimeout(() => {
+                    const btn = document.getElementById('btn-message-next');
+                    btn.classList.remove('opacity-0', 'pointer-events-none');
+                }, 1000);
+            }
+        }
+
+        // --- Gift Logic ---
+        function openGift() {
+            const giftClosed = document.getElementById('gift-closed');
+            const giftOpened = document.getElementById('gift-opened');
+            const tapText = document.getElementById('tap-gift-text');
+            
+            // Shake animation first
+            giftClosed.classList.remove('animate-bounce');
+            giftClosed.classList.add('animate-pulse'); // Simulating shake with pulse or custom keyframe
+            
+            setTimeout(() => {
+                giftClosed.classList.add('hidden');
+                giftOpened.classList.remove('hidden');
+                giftOpened.classList.add('flex');
+                tapText.classList.add('hidden');
+                document.getElementById('btn-replay').classList.remove('hidden');
+                
+                // Final big confetti
+                let duration = 3 * 1000;
+                let end = Date.now() + duration;
+
+                (function frame() {
+                    triggerConfetti(Math.random(), 0);
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+                
+            }, 800);
+        }
+
+        // --- Confetti Utility (Simple Implementation) ---
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const colors = ['#ec4899', '#facc15', '#3b82f6', '#ef4444', '#a855f7'];
+
+        function triggerConfetti(x, y) {
+            for (let i = 0; i < 30; i++) {
+                particles.push({
+                    x: x * canvas.width,
+                    y: y * canvas.height,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10 - 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 5 + 2,
+                    life: 100
+                });
+            }
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2; // Gravity
+                p.life--;
+                p.size *= 0.98;
+
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            requestAnimationFrame(animateConfetti);
+        }
+        animateConfetti();
+
+        // Resize canvas
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
