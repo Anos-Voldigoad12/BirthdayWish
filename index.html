@@ -777,7 +777,10 @@
             setTimeout(() => card.remove(), 500);
             
             if (stack.children.length <= 1) { // Last one being removed
-                document.getElementById('photoNextBtn').classList.remove('hidden');
+                // Automatically go to next scene after animation
+                setTimeout(() => {
+                    goToScene(6);
+                }, 500);
             }
         }
 
